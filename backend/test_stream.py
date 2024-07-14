@@ -8,6 +8,11 @@ def get_stream(url, payload: dict):
             print(line.decode("utf-8"), end="")
 
 
+def post_resp(url, payload):
+    response = requests.post(url, json=payload)
+    print(response.json().get("model_output"))
+
+
 def get_resp(url):
     # get request
     response = requests.get(url)
@@ -16,14 +21,19 @@ def get_resp(url):
 
 get_resp("http://127.0.0.1:8000/generate-mermaid/")
 
+# user_input = "Yes"
 # payload = {
 #     "userID": "user123",
 #     "requestID": "request123",
-#     "user_input": "AWS Lambda, AWS API Gateway, AWS S3, etc whatever you want",
+#     "user_input": user_input,
 #     "modelParameter": {"temperature": 0.75, "max_tokens": 2000, "top_p": 0.9},
 # }
 # url = "http://127.0.0.1:8000/chat-llm"
-# get_stream(url, payload)
+# # get_stream(url, payload)
+
+# print("User Input:", user_input)
+# print("Response:")
+# post_resp(url, payload)
 
 
 """

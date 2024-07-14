@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import time
 from logging import getLogger
@@ -14,10 +15,11 @@ from langchain_aws import ChatBedrock
 from pydantic import BaseModel
 from user_session import ChatSession
 
+logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 app = FastAPI()
 
-os.environ["AWS_PROFILE"] = "yash-geekle"
+# os.environ["AWS_PROFILE"] = "yash-geekle"
 origins = [
     "*",
 ]
@@ -49,14 +51,60 @@ class RequestModel(ModelKWArgs):
     model_id: str = "anthropic.claude-3-haiku-20240307-v1:0"
 
 
-async def chat_llm(request: RequestModel) -> AsyncIterable:
-    callback_handler = AsyncIteratorCallbackHandler()
+# async def chat_llm(request: RequestModel) -> AsyncIterable:
+#     callback_handler = AsyncIteratorCallbackHandler()
+
+#     chat_model = ChatBedrock(
+#         model_id=request.model_id,
+#         client=bedrock,
+#         model_kwargs=request.modelParameter,
+#         callbacks=[callback_handler],
+#         streaming=True,
+#     )
+
+#     text_input = request.user_input
+#     if len(chat_session.chats) == 0:
+#         initial_context = """
+#             I need some help getting the specifics needed to draw an architecture diagram.
+#             I will now give you my question or task and you can ask me subsequent questions one by one.
+#             Only ask the question and do not number your questions.
+#         """
+#         text_input = initial_context + text_input
+#     else:
+#         text_input = f"""
+#             Given the following conversation of chatbot and user:
+#             {chat_session.str_chat()}
+#             Proceed with new user response: "{text_input}" and ask one subsequent question in fewer than 100 words if necessary.
+#             You can also suggest the options for the user to choose from.
+#             Only ask the question and no extra text.
+#         """
+
+#     task = asyncio.create_task(
+#         chat_model.agenerate(messages=[[HumanMessage(content=text_input)]])
+#     )
+#     logger.info(f"Task created for user: {request.userID}")
+#     logger.info(f"User chat history: {chat_session.chats}")
+#     print(f"Task created for user: {request.userID}")
+#     print(f"User chat history: {chat_session.chats}")
+#     response_content = ""
+#     try:
+#         async for token in callback_handler.aiter():
+#             response_content += token
+#             yield token
+#     except Exception as e:
+#         print(f"Caught exception: {e}")
+#     finally:
+#         callback_handler.done.set()
+#     chat_session.add_chat(request.user_input, response_content)
+#     await task
+
+
+def chat_llm_no_stream(request: RequestModel) -> dict:
 
     chat_model = ChatBedrock(
         model_id=request.model_id,
         client=bedrock,
         model_kwargs=request.modelParameter,
-        callbacks=[callback_handler],
         streaming=True,
     )
 
@@ -72,28 +120,23 @@ async def chat_llm(request: RequestModel) -> AsyncIterable:
         text_input = f"""
             Given the following conversation of chatbot and user:
             {chat_session.str_chat()}
-            Proceed with new user response: "{text_input}" and ask one subsequent question in short if necessary.
+            Proceed with new user response: "{text_input}" and ask one subsequent question in fewer than 100 words if necessary.
+            Try to suggest the options for the user to choose from along with the question. 
+            Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
             Only ask the question and no extra text.
         """
 
-    task = asyncio.create_task(
-        chat_model.agenerate(messages=[[HumanMessage(content=text_input)]])
-    )
+    response = chat_model.invoke(text_input)
     logger.info(f"Task created for user: {request.userID}")
     logger.info(f"User chat history: {chat_session.chats}")
     print(f"Task created for user: {request.userID}")
     print(f"User chat history: {chat_session.chats}")
-    response_content = ""
-    try:
-        async for token in callback_handler.aiter():
-            response_content += token
-            yield token
-    except Exception as e:
-        print(f"Caught exception: {e}")
-    finally:
-        callback_handler.done.set()
+    response_content = response.content
     chat_session.add_chat(request.user_input, response_content)
-    await task
+    return {
+        "user_input": request.user_input,
+        "model_output": response_content,
+    }
 
 
 def generate_mermaid() -> str:
@@ -107,10 +150,13 @@ def generate_mermaid() -> str:
     prompt = f"""
     Given the following conversation:
     {chat_session.str_chat()}
-    Generate a mermaid code to represent the architecture.
-    Make sure each component's name is detailed'.
-    Also write texts on the arrows to represent the flow of data.
+    Generate a mermaid code to represent the architecture.    
+    Make sure each component's name is detailed.
+    Also write texts on the arrows to represent the flow of data. 
+        For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
     Only generate the code and nothing else.
+    Include as many components as possible and each component should have a detailed name.
+    Use colors and styles to differentiate between components. Be creative.
     """
     response = model.invoke(prompt)
     content = response.content
@@ -130,13 +176,23 @@ def generate_mermaid() -> str:
 
 
 @app.post("/chat-llm/")
-async def stream_chat(request: RequestModel):
-    generator = chat_llm(request)
+def stream_chat(request: RequestModel):
+    response = chat_llm_no_stream(request)
     chat_session.user_id = request.userID
     chat_session.request_id = request.requestID
     chat_session.model_id = request.model_id
     chat_session.model_kwargs = request.modelParameter
-    return StreamingResponse(generator, media_type="text/event-stream")
+    return response
+
+
+# @app.post("/chat-llm/")
+# async def stream_chat(request: RequestModel):
+#     generator = chat_llm(request)
+#     chat_session.user_id = request.userID
+#     chat_session.request_id = request.requestID
+#     chat_session.model_id = request.model_id
+#     chat_session.model_kwargs = request.modelParameter
+#     return StreamingResponse(generator, media_type="text/event-stream")
 
 
 @app.get("/generate-mermaid/")
