@@ -148,12 +148,18 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
 @app.post("/chat-llm/")
 def stream_chat(request: RequestModel):
     chat_session = session_manager.get_session(request.userID)
-    response = chat_llm_no_stream(request, chat_session)
-    chat_session.user_id = request.userID
-    chat_session.request_id = request.requestID
-    chat_session.model_id = request.modelID
-    chat_session.model_kwargs = request.modelParameter
-    return response
+    try:
+        response = chat_llm_no_stream(request, chat_session)
+        chat_session.user_id = request.userID
+        chat_session.request_id = request.requestID
+        chat_session.model_id = request.modelID
+        chat_session.model_kwargs = request.modelParameter
+        return response
+    except Exception as e:
+        logger.error(f"Error generating detailed solution: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating detailed solution: {str(e)}"
+        )
 
 
 @app.post("/generate-mermaid/")
