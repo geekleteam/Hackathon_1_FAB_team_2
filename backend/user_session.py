@@ -27,3 +27,8 @@ class ChatSession:
         self.request_id = None
         self.model_id = None
         self.model_kwargs = None
+
+    def str_chat(self) -> str:
+        return "\n".join(
+            [f"User: {chat['user']}\nModel:{chat['model']}" for chat in self.chats]
+        )
