@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the main.py and llm.py files into the container at /app
 COPY chat.py user_session.py /app/
 
-# Make port 8000 available to the world outside this container
+# Make port 8000 available to the world outside this container --> this change
 EXPOSE 8000
 
 # Run app.py when the container launches
