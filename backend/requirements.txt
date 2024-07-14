@@ -1,0 +1,4 @@
+langhchain-aws
+boto3
+fastapi
+pydantic
