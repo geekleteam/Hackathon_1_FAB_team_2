@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from logging import getLogger
-from typing import AsyncIterable
+from typing import AsyncIterable, Dict
 
 import boto3
 from fastapi import FastAPI, HTTPException
@@ -13,17 +13,16 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.schema import HumanMessage
 from langchain_aws import ChatBedrock
 from pydantic import BaseModel
-from user_session import ChatSession
+from user_session import ChatSession, ChatSessionManager
 
 logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 app = FastAPI()
 
-# os.environ["AWS_PROFILE"] = "yash-geekle"
+os.environ["AWS_PROFILE"] = "yash-geekle"
 origins = [
     "*",
 ]
-chat_session = ChatSession()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -34,6 +33,7 @@ app.add_middleware(
 
 # fix the region_name -> us-west-2
 bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
+session_manager = ChatSessionManager()
 
 
 class ModelKWArgs(BaseModel):
@@ -51,55 +51,11 @@ class RequestModel(ModelKWArgs):
     model_id: str = "anthropic.claude-3-haiku-20240307-v1:0"
 
 
-# async def chat_llm(request: RequestModel) -> AsyncIterable:
-#     callback_handler = AsyncIteratorCallbackHandler()
-
-#     chat_model = ChatBedrock(
-#         model_id=request.model_id,
-#         client=bedrock,
-#         model_kwargs=request.modelParameter,
-#         callbacks=[callback_handler],
-#         streaming=True,
-#     )
-
-#     text_input = request.user_input
-#     if len(chat_session.chats) == 0:
-#         initial_context = """
-#             I need some help getting the specifics needed to draw an architecture diagram.
-#             I will now give you my question or task and you can ask me subsequent questions one by one.
-#             Only ask the question and do not number your questions.
-#         """
-#         text_input = initial_context + text_input
-#     else:
-#         text_input = f"""
-#             Given the following conversation of chatbot and user:
-#             {chat_session.str_chat()}
-#             Proceed with new user response: "{text_input}" and ask one subsequent question in fewer than 100 words if necessary.
-#             You can also suggest the options for the user to choose from.
-#             Only ask the question and no extra text.
-#         """
-
-#     task = asyncio.create_task(
-#         chat_model.agenerate(messages=[[HumanMessage(content=text_input)]])
-#     )
-#     logger.info(f"Task created for user: {request.userID}")
-#     logger.info(f"User chat history: {chat_session.chats}")
-#     print(f"Task created for user: {request.userID}")
-#     print(f"User chat history: {chat_session.chats}")
-#     response_content = ""
-#     try:
-#         async for token in callback_handler.aiter():
-#             response_content += token
-#             yield token
-#     except Exception as e:
-#         print(f"Caught exception: {e}")
-#     finally:
-#         callback_handler.done.set()
-#     chat_session.add_chat(request.user_input, response_content)
-#     await task
+class MermaidRequest(BaseModel):
+    userID: str
 
 
-def chat_llm_no_stream(request: RequestModel) -> dict:
+def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict:
 
     chat_model = ChatBedrock(
         model_id=request.model_id,
@@ -107,6 +63,21 @@ def chat_llm_no_stream(request: RequestModel) -> dict:
         model_kwargs=request.modelParameter,
         streaming=True,
     )
+    if len(chat_session.chats) != 0:
+        wants_to_draw_prompt = f"""
+            There has been a conversation between the user and the chatbot about building an architecture diagram.
+            You have to judge whether the user wants to draw the diagram or not.
+            Their should be an implication in the user's response to draw or being ready.
+            Given the user's input: {request.user_input}
+            Does the user imply that they are satisfied or draw a diagram?
+            Respond with Yes or No. 
+        """
+        wants_to_draw = chat_model.invoke(wants_to_draw_prompt).content
+        if "Yes" in wants_to_draw:
+            return {
+                "user_input": request.user_input,
+                "wantsToDraw": True,
+            }
 
     text_input = request.user_input
     if len(chat_session.chats) == 0:
@@ -129,17 +100,17 @@ def chat_llm_no_stream(request: RequestModel) -> dict:
     response = chat_model.invoke(text_input)
     logger.info(f"Task created for user: {request.userID}")
     logger.info(f"User chat history: {chat_session.chats}")
-    print(f"Task created for user: {request.userID}")
-    print(f"User chat history: {chat_session.chats}")
+
     response_content = response.content
     chat_session.add_chat(request.user_input, response_content)
     return {
         "user_input": request.user_input,
         "model_output": response_content,
+        "wantsToDraw": False,
     }
 
 
-def generate_mermaid() -> str:
+def generate_mermaid(chat_session: ChatSession) -> dict:
     model = ChatBedrock(
         model_id=chat_session.model_id,
         client=bedrock,
@@ -172,12 +143,16 @@ def generate_mermaid() -> str:
     if last_index != -1:
         content = content[:last_index]
 
-    return content
+    return {
+        "mermaid_code": content,
+        "userID": chat_session.user_id,
+    }
 
 
 @app.post("/chat-llm/")
 def stream_chat(request: RequestModel):
-    response = chat_llm_no_stream(request)
+    chat_session = session_manager.get_session(request.userID)
+    response = chat_llm_no_stream(request, chat_session)
     chat_session.user_id = request.userID
     chat_session.request_id = request.requestID
     chat_session.model_id = request.model_id
@@ -185,24 +160,14 @@ def stream_chat(request: RequestModel):
     return response
 
 
-# @app.post("/chat-llm/")
-# async def stream_chat(request: RequestModel):
-#     generator = chat_llm(request)
-#     chat_session.user_id = request.userID
-#     chat_session.request_id = request.requestID
-#     chat_session.model_id = request.model_id
-#     chat_session.model_kwargs = request.modelParameter
-#     return StreamingResponse(generator, media_type="text/event-stream")
-
-
-@app.get("/generate-mermaid/")
-def generate_mermaid_code():
-    mermaid_code = generate_mermaid()
-    chat_session.flush()
-    return mermaid_code
+@app.post("/generate-mermaid/")
+def generate_mermaid_code(mermaid_request: MermaidRequest):
+    chat_session = session_manager.get_session(mermaid_request.userID)
+    mermaid_response = generate_mermaid(chat_session)
+    return mermaid_response
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
