@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Copy the main.py and llm.py files into the container at /app
-COPY main.py llm.py /app/
+COPY chat.py user_session.py /app/
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
