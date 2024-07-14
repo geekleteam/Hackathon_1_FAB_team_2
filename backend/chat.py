@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 app = FastAPI()
 
-os.environ["AWS_PROFILE"] = "yash-geekle"
+# os.environ["AWS_PROFILE"] = "yash-geekle"
 origins = [
     "*",
 ]
