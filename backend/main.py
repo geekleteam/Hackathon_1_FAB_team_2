@@ -146,7 +146,7 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
 
 
 @app.post("/chat-llm/")
-def stream_chat(request: RequestModel):
+def chat_llm(request: RequestModel):
     chat_session = session_manager.get_session(request.userID)
     try:
         response = chat_llm_no_stream(request, chat_session)
@@ -170,7 +170,7 @@ def generate_mermaid_code(mermaid_request: MermaidRequest):
 
 
 @app.post("/get-user-history/")
-def generate_mermaid_code(mermaid_request: MermaidRequest):
+def get_user_history(mermaid_request: MermaidRequest):
     chat_session = session_manager.get_session(mermaid_request.userID)
     chat_history = chat_session.chats
     return {"userID": mermaid_request.userID, "chat_history": chat_history}
