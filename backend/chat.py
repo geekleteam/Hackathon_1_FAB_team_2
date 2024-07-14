@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 app = FastAPI()
 
-os.environ["AWS_PROFILE"] = "yash-geekle"
+# os.environ["AWS_PROFILE"] = "yash-geekle"
 origins = [
     "*",
 ]
@@ -61,9 +61,10 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
         wants_to_draw_prompt = f"""
             There has been a conversation between the user and the chatbot about building an architecture diagram.
             You have to judge whether the user wants to draw the diagram or not.
-            Their should be an implication in the user's response to draw or being ready.
             Given the user's input: {request.user_input}
-            Does the user imply that they are satisfied or draw a diagram?
+            Does the user imply that they are done or draw a diagram?
+            User may ask: Can you draw...? or I think this is it. or Done, or draw, etc.
+            Don't say yes when user lists a bunch of components and their ideas.
             Respond with Yes or No. 
         """
         wants_to_draw = chat_model.invoke(wants_to_draw_prompt).content
