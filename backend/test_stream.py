@@ -1,39 +1,30 @@
+import json
+
 import requests
-
-
-def get_stream(url, payload: dict):
-    s = requests.Session()
-    with s.post(url, json=payload, stream=True) as response:
-        for line in response.iter_content():
-            print(line.decode("utf-8"), end="")
 
 
 def post_resp(url, payload):
     response = requests.post(url, json=payload)
-    print(response.json().get("model_output"))
+    response = response.json()
+    print(json.dumps(response, indent=4))
 
 
-def get_resp(url):
-    # get request
-    response = requests.get(url)
-    print(response.text)
+user_input = "draw"
+payload = {
+    "userID": "user123",
+    "requestID": "request123",
+    "user_input": user_input,
+    "modelParameter": {"temperature": 0.75, "max_tokens": 2000, "top_p": 0.9},
+}
+url = "http://127.0.0.1:8000/chat-llm"
 
+payload = {"userID": "user123"}
+url = "http://127.0.0.1:8000/generate-mermaid"
 
-get_resp("http://127.0.0.1:8000/generate-mermaid/")
-
-# user_input = "Yes"
-# payload = {
-#     "userID": "user123",
-#     "requestID": "request123",
-#     "user_input": user_input,
-#     "modelParameter": {"temperature": 0.75, "max_tokens": 2000, "top_p": 0.9},
-# }
-# url = "http://127.0.0.1:8000/chat-llm"
-# # get_stream(url, payload)
 
 # print("User Input:", user_input)
-# print("Response:")
-# post_resp(url, payload)
+print("Response:")
+post_resp(url, payload)
 
 
 """
