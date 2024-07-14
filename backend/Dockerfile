@@ -18,4 +18,4 @@ COPY chat.py user_session.py /app/
 EXPOSE 8000
 
 # Run app.py when the container launches
-CMD ["uvicorn", "chat:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "chat:app", "--host", "0.0.0.0", "--port", "8001"]
