@@ -2,7 +2,6 @@ from typing import Dict, List, Optional
 
 
 class ChatSession:
-
     def __init__(
         self,
         user_id: Optional[str] = None,
@@ -32,3 +31,17 @@ class ChatSession:
         return "\n".join(
             [f"User: {chat['user']}\nModel:{chat['model']}" for chat in self.chats]
         )
+
+
+class ChatSessionManager:
+    def __init__(self):
+        self.sessions: Dict[str, ChatSession] = {}
+
+    def get_session(self, user_id: str) -> ChatSession:
+        if user_id not in self.sessions:
+            self.sessions[user_id] = ChatSession()
+        return self.sessions[user_id]
+
+    def remove_session(self, user_id: str):
+        if user_id in self.sessions:
+            del self.sessions[user_id]
