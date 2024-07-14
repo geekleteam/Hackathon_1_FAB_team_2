@@ -42,7 +42,7 @@ class RequestModel(ModelKWArgs):
     userID: str
     requestID: str
     user_input: str
-    model_id: str = "anthropic.claude-3-haiku-20240307-v1:0"
+    modelID: str = "anthropic.claude-3-haiku-20240307-v1:0"
 
 
 class MermaidRequest(BaseModel):
@@ -52,7 +52,7 @@ class MermaidRequest(BaseModel):
 def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict:
 
     chat_model = ChatBedrock(
-        model_id=request.model_id,
+        model_id=request.modelID,
         client=bedrock,
         model_kwargs=request.modelParameter,
         streaming=True,
@@ -151,7 +151,7 @@ def stream_chat(request: RequestModel):
     response = chat_llm_no_stream(request, chat_session)
     chat_session.user_id = request.userID
     chat_session.request_id = request.requestID
-    chat_session.model_id = request.model_id
+    chat_session.model_id = request.modelID
     chat_session.model_kwargs = request.modelParameter
     return response
 
