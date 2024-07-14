@@ -1,4 +1,4 @@
-langhchain-aws
+langchain-aws
 boto3
 fastapi
 pydantic
