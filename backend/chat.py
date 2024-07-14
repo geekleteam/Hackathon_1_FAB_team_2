@@ -1,4 +1,5 @@
 import logging
+import os
 from logging import getLogger
 
 import boto3
@@ -12,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 app = FastAPI()
 
-# os.environ["AWS_PROFILE"] = "yash-geekle"
+os.environ["AWS_PROFILE"] = "yash-geekle"
 origins = [
     "*",
 ]
@@ -67,6 +68,7 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
         """
         wants_to_draw = chat_model.invoke(wants_to_draw_prompt).content
         if "Yes" in wants_to_draw:
+            chat_session.add_chat(request.user_input, wants_to_draw)
             return {
                 "user_input": request.user_input,
                 "wantsToDraw": True,
@@ -160,7 +162,14 @@ def generate_mermaid_code(mermaid_request: MermaidRequest):
     return mermaid_response
 
 
+@app.post("/get-user-history/")
+def generate_mermaid_code(mermaid_request: MermaidRequest):
+    chat_session = session_manager.get_session(mermaid_request.userID)
+    chat_history = chat_session.chats
+    return {"userID": mermaid_request.userID, "chat_history": chat_history}
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

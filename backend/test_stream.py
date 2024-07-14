@@ -9,7 +9,9 @@ def post_resp(url, payload):
     print(json.dumps(response, indent=4))
 
 
-user_input = "draw"
+user_input = (
+    "A data processing component, a db component, model registry, cloudwatch, etc"
+)
 payload = {
     "userID": "user123",
     "requestID": "request123",
@@ -19,10 +21,11 @@ payload = {
 url = "http://127.0.0.1:8000/chat-llm"
 
 payload = {"userID": "user123"}
-url = "http://127.0.0.1:8000/generate-mermaid"
+# url = "http://127.0.0.1:8000/generate-mermaid"
+url = "http://127.0.0.1:8000/get-user-history"
 
 
-# print("User Input:", user_input)
+print("User Input:", user_input)
 print("Response:")
 post_resp(url, payload)
 
