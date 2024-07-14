@@ -17,5 +17,5 @@ COPY chat.py user_session.py /app/
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
-# Run app.py when the container launches
+# Run app.py when the container launches --> this is the change
 CMD ["uvicorn", "chat:app", "--host", "0.0.0.0", "--port", "8000"]
