@@ -89,10 +89,10 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
         text_input = f"""
             Given the following conversation of chatbot and user:
             {chat_session.str_chat()}
-            Proceed with new user response: "{text_input}" and ask one subsequent question in fewer than 100 words if necessary.
             Try to suggest the options for the user to choose from along with the question. 
             Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
-            Only ask the question and no extra text.
+            Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
+            Proceed with new user response: "{text_input}" and ask one subsequent question in fewer than 100 words if necessary.
         """
 
     response = chat_model.invoke(text_input)
@@ -125,8 +125,8 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
         For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
     If you're using style, dont use quotes after it. You often make that mistake.
     Only generate the code and nothing else.
-    Include as many components as possible and each component should have a detailed name.
-    Use colors and styles to differentiate between components. Be creative.
+    Make sure to cover all important components and they should have a detailed name.
+    Use colors and styles to differentiate between components. 
     """
     response = model.invoke(prompt)
     content = response.content
