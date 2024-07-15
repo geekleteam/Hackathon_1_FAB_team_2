@@ -121,6 +121,7 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     Make sure each component's name is detailed.
     Also write texts on the arrows to represent the flow of data. 
         For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
+    If you're using style, dont use quotes after it. You often make that mistake.
     Only generate the code and nothing else.
     Include as many components as possible and each component should have a detailed name.
     Use colors and styles to differentiate between components. Be creative.
@@ -174,6 +175,13 @@ def get_user_history(mermaid_request: MermaidRequest):
     chat_session = session_manager.get_session(mermaid_request.userID)
     chat_history = chat_session.chats
     return {"userID": mermaid_request.userID, "chat_history": chat_history}
+
+
+@app.post("/delete-user-history/")
+def get_user_history(mermaid_request: MermaidRequest):
+    session_manager.remove_session(mermaid_request.userID)
+
+    return {"userID": mermaid_request.userID, "status": "deleted"}
 
 
 if __name__ == "__main__":
