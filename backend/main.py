@@ -1,5 +1,5 @@
+import json
 import logging
-import os
 from logging import getLogger
 
 import boto3
@@ -13,7 +13,6 @@ logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 app = FastAPI()
 
-# os.environ["AWS_PROFILE"] = "yash-geekle"
 origins = [
     "*",
 ]
@@ -60,6 +59,9 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
     if len(chat_session.chats) != 0:
         wants_to_draw_prompt = f"""
             There has been a conversation between the user and the chatbot about building an architecture diagram.
+            The last conversation is as follows:
+            {json.dumps(chat_session.chats[-1])}
+
             You have to judge whether the user wants to draw the diagram or not.
             Given the user's input: {request.user_input}
             Does the user imply that they are done or draw a diagram?
