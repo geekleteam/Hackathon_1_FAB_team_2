@@ -119,13 +119,12 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     prompt = f"""
     Given the following conversation:
     {chat_session.str_chat()}
-    Generate a mermaid code to represent the architecture.    
-    Make sure each component's name is detailed.
-    Also write texts on the arrows to represent the flow of data where necessary. 
+    Generate a mermaid code to represent the architecture, diagram or flowchart based on the conversation.
+    Also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram. 
         For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
-    Only generate the code and nothing else.
     Make sure to cover all important components and they should have a detailed name.
-    Use colors and styles to differentiate between components. 
+    Use colors and styles to differentiate between components. Don't use too much.
+    Only generate the mermaid code and nothing else.
     """
     response = model.invoke(prompt)
     content = response.content
