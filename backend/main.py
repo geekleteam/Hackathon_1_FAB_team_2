@@ -176,6 +176,13 @@ def get_user_history(mermaid_request: MermaidRequest):
     return {"userID": mermaid_request.userID, "chat_history": chat_history}
 
 
+@app.post("/delete-user-history/")
+def get_user_history(mermaid_request: MermaidRequest):
+    session_manager.remove_session(mermaid_request.userID)
+
+    return {"userID": mermaid_request.userID, "status": "deleted"}
+
+
 if __name__ == "__main__":
     import uvicorn
 
