@@ -99,7 +99,8 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
             Try to suggest the options for the user to choose from along with the question. 
             Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
             Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
-            Ask one subsequent question in fewer than 50 words if necessary. Only ask ONE question and no extra text.
+            Refrain from repeating the questions already answered by the user in the conversation.
+            Ask one subsequent question in short if necessary. Only ask ONE question and no extra text.
         """
 
     response = chat_model.invoke(text_input)
@@ -126,10 +127,10 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     prompt = f"""
     Given the following conversation:
     {chat_session.str_chat()}
-    Generate a mermaid code to represent the architecture, diagram or whichever is suitable.
-    Try to extract user requirements from the conversation and use it in the diagram.
+    Generate a mermaid code to represent the architecture, diagram, ER diagram or whichever is suitable depending on what user asks for.
+    Try to extract user requirements from the conversation and use the context in the diagram.
     Also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram. 
-        For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
+        For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] 
     Make sure to cover all important components and they should have a detailed name.
     Use colors and styles to differentiate between components. Don't use too much.
     Only generate the mermaid code and nothing else.
