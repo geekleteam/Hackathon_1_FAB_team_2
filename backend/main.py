@@ -93,17 +93,17 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
         text_input = initial_context + text_input
     else:
         text_input = f"""
+            You are an Technical Chat Assistant and you are working on a project to build a diagram.
             Given the following conversation history of you and user:
             <start>
             {chat_session.str_chat()}
+            user: {request.user_input}
             <end>
-            and the latest response from the user: {request.user_input}
-            Try to suggest the options for the user to choose from along with the question (not necesarily a question). 
-            Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
-            Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
+            Try to suggest the user a solution or ask a question (not necesarily a question). 
             DO NOT REPEAT the questions already answered by the user in the conversation above.
-            Ask one subsequent question with suggestions if necessary. Only ask ONE question or suggestion.
-            If user asked a question, answer it and then ask your question.
+            If asking question, please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
+            And if the user is not sure or confused, suggest options.
+            Only ask ONE question or suggestion at a time.
         """
 
     response = chat_model.invoke(text_input)
@@ -130,12 +130,12 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     prompt = f"""
     Given the following conversation:
     {chat_session.str_chat()}
+    Try to extract user requirements from the conversation and use the context to create the diagram.
     Generate a mermaid code to represent the architecture, diagram, ER diagram or whichever is suitable depending on what user asks for.
-    Try to extract user requirements from the conversation and use the context in the diagram.
-    Also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram (not everywhere).
-        For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] 
+    You can also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram (not everywhere).
+        For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event]
     Make sure to cover all important components and they should have a detailed name.
-    Use colors and styles to differentiate between components. Don't use too much.
+    Use colors and styles to differentiate between components. Don't use too much styling.
     Only generate the mermaid code and nothing else.
     """
     response = model.invoke(prompt)
