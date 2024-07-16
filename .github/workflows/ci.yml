@@ -23,7 +23,18 @@ jobs:
       run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       
     - name: Build the Docker image
-      run: docker build -t hoangnv99/teamfab-backend-2 backend/.
+      env:
+        DB_HOST: ${{secrets.DB_HOST}}
+        DB_NAME: ${{secrets.DB_NAME}}
+        DB_USER: ${{secrets.DB_USER}}
+        DB_PASSWORD: ${{secrets.DB_PASSWORD}}
+        DB_PORT: ${{secrets.DB_PORT}}
+      run: docker build --build-arg DB_HOST=${{ secrets.DB_HOST }} \
+                    --build-arg DB_NAME=${{ secrets.DB_NAME }} \
+                    --build-arg DB_USER=${{ secrets.DB_USER }} \
+                    --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+                    --build-arg DB_PORT=${{ secrets.DB_PORT }} \
+                    -t hoangnv99/teamfab-backend-2 backend/.
     
     - name: Push to Dockerhub
       run: docker push hoangnv99/teamfab-backend-2:latest
