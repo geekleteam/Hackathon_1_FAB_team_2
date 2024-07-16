@@ -4,6 +4,8 @@
 Converstational Bot
 
 Chat LLM API: http://18.237.155.139:8000/chat-llm
+
+This API is used to push user's chat with the bot to the database.
 ```json
 {
     "userID": "user123",
@@ -27,6 +29,7 @@ Response:
 
 Mermaid Code Generation API: http://18.237.155.139:8000/generate-mermaid
 (would only work if the user has had a chat session before)
+This API tells the backend to fetch user chats and return the mermaid code for user requirements.
 
 ```json
 {
