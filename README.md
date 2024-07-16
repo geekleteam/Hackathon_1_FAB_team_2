@@ -4,6 +4,11 @@
 
 [Individual Demos from the team](https://drive.google.com/drive/folders/1-P_toKdJ-SRMLXh0ZMZMdOPXgWeuQkkU?usp=sharing)
 
+Our 3 Repos:
+https://github.com/geekleteam/Hackathon_1_FAB_team_1
+https://github.com/geekleteam/Hackathon_1_FAB_team_2
+https://github.com/geekleteam/Hackathon_1_FAB_team_3
+
 ## Converstational Bot
 
 Chat LLM API: 
