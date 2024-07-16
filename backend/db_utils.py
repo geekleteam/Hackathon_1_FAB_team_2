@@ -3,6 +3,8 @@ import logging
 import os
 
 import psycopg2
+from dotenv import load_dotenv
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
