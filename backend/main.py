@@ -132,6 +132,8 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     {chat_session.str_chat()}
     Try to extract user requirements from the conversation and use the context to create the diagram.
     Generate a mermaid code to represent the architecture, diagram, ER diagram or whichever is suitable depending on what user asks for.
+    DO NOT INCLUDE the conversation in the diagram. Do no use user or bot in the diagram. 
+    You are supposed to draw the archtecture or flowchart being discussed.
     You can also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram (not everywhere).
         For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event]
     Make sure to cover all important components and they should have a detailed name.
