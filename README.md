@@ -25,12 +25,13 @@ Response:
 }
 ```
 
-Mermaid Code Generation API: http://18.237.155.139:8000/chat-llm
+Mermaid Code Generation API: http://18.237.155.139:8000/generate-mermaid
 (would only work if the user has had a chat session before)
 
 ```json
 {
-    "userID": "user123"
+    "userID": "user123",
+    "requestID": "request123"
 }
 ```
 Response:
