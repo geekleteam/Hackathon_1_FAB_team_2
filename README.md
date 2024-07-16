@@ -1,6 +1,6 @@
 # Hackathon_1_FAB_team_2 (ChatBot and Mermaidcode Generation)
 
-[Working Demo](http://103.116.8.27:3000/chat-interface)
+[Working Demo](https://fab-team.xyz/chat-interface)
 
 Converstational Bot
 
