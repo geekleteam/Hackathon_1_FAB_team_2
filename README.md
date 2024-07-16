@@ -2,7 +2,7 @@
 
 [Working Demo](https://fab-team.xyz/chat-interface)
 
-Converstational Bot
+## Converstational Bot
 
 Chat LLM API: http://18.237.155.139:8000/chat-llm
 
@@ -28,6 +28,7 @@ Response:
 }
 ```
 
+## Mermaid Code Generation
 Mermaid Code Generation API: http://18.237.155.139:8000/generate-mermaid
 (would only work if the user has had a chat session before)
 This API tells the backend to fetch user chats and return the mermaid code for user requirements.
@@ -45,3 +46,4 @@ Response:
     "userID": "yash"
 }
 ```
+
