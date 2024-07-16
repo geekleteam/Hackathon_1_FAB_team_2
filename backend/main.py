@@ -127,7 +127,7 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     Given the following conversation:
     {chat_session.str_chat()}
     Generate a mermaid code to represent the architecture, diagram or whichever is suitable.
-    Try to summarize the conversation and represent it in a diagram.
+    Try to extract user requirements from the conversation and use it in the diagram.
     Also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram. 
         For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
     Make sure to cover all important components and they should have a detailed name.
