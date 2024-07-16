@@ -98,11 +98,11 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
             {chat_session.str_chat()}
             <end>
             and the latest response from the user: {request.user_input}
-            Try to suggest the options for the user to choose from along with the question. 
+            Try to suggest the options for the user to choose from along with the question (not necesarily a question). 
             Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
             Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
             DO NOT REPEAT the questions already answered by the user in the conversation above.
-            Ask one subsequent question with suggestions if necessary. Only ask ONE question.
+            Ask one subsequent question with suggestions if necessary. Only ask ONE question or suggestion.
             If user asked a question, answer it and then ask your question.
         """
 
