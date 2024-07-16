@@ -100,7 +100,7 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
             Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
             Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
             Refrain from repeating the questions already answered by the user in the conversation.
-            Ask one subsequent question in short if necessary. Only ask ONE question and no extra text.
+            Ask one subsequent question in short with suggestions if necessary. Only ask ONE question and no extra text.
         """
 
     response = chat_model.invoke(text_input)
