@@ -18,15 +18,4 @@ jobs:
     - name: Delete Old docker container
       run: sudo docker rm -f teamfab-backend-phase2 || true
     - name: Run Docker Container
-      run: sudo docker run \
-    -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-    -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-    -e AWS_REGION=ap-west-2 \
-    -e DB_HOST=${{ secrets.DB_HOST }} \
-    -e DB_NAME=${{ secrets.DB_NAME }} \
-    -e DB_USER=${{ secrets.DB_USER }} \
-    -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-    -e DB_PORT=${{ secrets.DB_PORT }} \
-    -d -p 8000:8000 \
-    --name teamfab-backend-phase2 \
-    hoangnv99/teamfab-backend-2
+      run: sudo docker run -e DB_HOST=${{secrets.DB_HOST}} -e DB_NAME=${{secrets.DB_NAME}} -e DB_USER=${{secrets.DB_USER}} -e DB_PASSWORD=${{secrets.DB_PASSWORD}} -e DB_PORT=${{secrets.DB_PORT}} -e AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}} -e AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}} -e AWS_REGION=ap-west-2 -d -p 8000:8000 --name teamfab-backend-phase2 hoangnv99/teamfab-backend-2
