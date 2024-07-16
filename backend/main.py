@@ -103,6 +103,7 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
             Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
             DO NOT REPEAT the questions already answered by the user in the conversation above.
             Ask one subsequent question with suggestions if necessary. Only ask ONE question.
+            If user asked a question, answer it and then ask your question.
         """
 
     response = chat_model.invoke(text_input)
