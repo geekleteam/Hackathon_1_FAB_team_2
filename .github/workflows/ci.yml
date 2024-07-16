@@ -12,10 +12,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    
-    # - name: Navigate to backend directory
-    #   run: cd backend
-    
     - name: Login Dockerhub
       env:
         DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
@@ -23,7 +19,6 @@ jobs:
       run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       
     - name: Build the Docker image
-      run: docker build -t hoangnv99/teamfab-backend-2 backend/.
-    
+      run: docker build -t hoangnv99/teamfab-backend-2 .
     - name: Push to Dockerhub
       run: docker push hoangnv99/teamfab-backend-2:latest

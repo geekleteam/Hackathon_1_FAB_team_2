@@ -3,4 +3,3 @@ boto3
 fastapi
 pydantic
 psycopg2-binary
-python-dotenv

@@ -3,8 +3,6 @@ import logging
 import os
 
 import psycopg2
-from dotenv import load_dotenv
-load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,11 +11,11 @@ logger = logging.getLogger(__name__)
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            host=os.environ["db_host"],
-            dbname=os.environ["db_name"],
-            user=os.environ["db_user"],
-            password=os.environ["db_password"],
-            port=os.environ["db_port"],
+            host=os.environ["DB_HOST"],
+            dbname=os.environ["DB_NAME"],
+            user=os.environ["DB_USER"],
+            password=os.environ["DB_PASSWORD"],
+            port=os.environ["DB_PORT"],
         )
         logger.info("Connection to DB established..")
         return conn
