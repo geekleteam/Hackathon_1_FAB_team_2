@@ -1,8 +1,10 @@
 import json
 import logging
+import os
 from logging import getLogger
 
 import boto3
+from db_utils import get_db_connection
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_aws import ChatBedrock
@@ -11,6 +13,7 @@ from user_session import ChatSession, ChatSessionManager
 
 logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
+conn = get_db_connection()
 app = FastAPI()
 
 origins = [
@@ -26,7 +29,7 @@ app.add_middleware(
 
 # fix the region_name -> us-west-2
 bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
-session_manager = ChatSessionManager()
+session_manager = ChatSessionManager(conn=conn)
 
 
 class ModelKWArgs(BaseModel):
@@ -37,21 +40,24 @@ class ModelKWArgs(BaseModel):
     }
 
 
+MODEL = os.getenv("MODEL", "anthropic.claude-3-haiku-20240307-v1:0")
+
+
 class RequestModel(ModelKWArgs):
     userID: str
     requestID: str
     user_input: str
-    modelID: str = "anthropic.claude-3-haiku-20240307-v1:0"
 
 
 class MermaidRequest(BaseModel):
     userID: str
+    requestID: str
 
 
 def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict:
 
     chat_model = ChatBedrock(
-        model_id=request.modelID,
+        model_id=MODEL,
         client=bedrock,
         model_kwargs=request.modelParameter,
         streaming=True,
@@ -60,18 +66,18 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
         wants_to_draw_prompt = f"""
             There has been a conversation between the user and the chatbot about building an architecture diagram.
             The last conversation is as follows:
-            {json.dumps(chat_session.chats[-1])}
+            {json.dumps(chat_session.chats[-1:])}
 
             You have to judge whether the user wants to draw the diagram or not.
             Given the user's input: {request.user_input}
             Does the user imply that they are done or draw a diagram?
             User may ask: Can you draw...? or I think this is it. or Done, or draw, etc.
             Don't say yes when user lists a bunch of components and their ideas.
-            Respond with Yes or No. 
+            Respond with Yes or No. No extra text.
         """
         wants_to_draw = chat_model.invoke(wants_to_draw_prompt).content
         if "Yes" in wants_to_draw:
-            chat_session.add_chat(request.user_input, wants_to_draw)
+            chat_session.add_chat(request.user_input, wants_to_draw, conn=conn)
             return {
                 "user_input": request.user_input,
                 "wantsToDraw": True,
@@ -89,10 +95,11 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
         text_input = f"""
             Given the following conversation of chatbot and user:
             {chat_session.str_chat()}
+            and the latest response from the user: {request.user_input}
             Try to suggest the options for the user to choose from along with the question. 
             Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
             Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
-            Proceed with new user response: "{text_input}" and ask one subsequent question in fewer than 100 words if necessary.
+            Ask one subsequent question in fewer than 50 words if necessary. Only ask the question and no extra text.
         """
 
     response = chat_model.invoke(text_input)
@@ -100,7 +107,7 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
     logger.info(f"User chat history: {chat_session.chats}")
 
     response_content = response.content
-    chat_session.add_chat(request.user_input, response_content)
+    chat_session.add_chat(request.user_input, response_content, conn=conn)
     return {
         "user_input": request.user_input,
         "model_output": response_content,
@@ -110,7 +117,7 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
 
 def generate_mermaid(chat_session: ChatSession) -> dict:
     model = ChatBedrock(
-        model_id=chat_session.model_id,
+        model_id=MODEL,
         client=bedrock,
         model_kwargs=chat_session.model_kwargs,
     )
@@ -119,7 +126,8 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
     prompt = f"""
     Given the following conversation:
     {chat_session.str_chat()}
-    Generate a mermaid code to represent the architecture, diagram or flowchart based on the conversation.
+    Generate a mermaid code to represent the architecture, diagram or whichever is suitable.
+    Try to summarize the conversation and represent it in a diagram.
     Also write texts on the arrows to represent the flow of data where necessary depending on the type of diagram. 
         For ex. F -->|Transaction Succeeds| G[Publish PRODUCT_PURCHASED event] --> END
     Make sure to cover all important components and they should have a detailed name.
@@ -148,12 +156,12 @@ def generate_mermaid(chat_session: ChatSession) -> dict:
 
 @app.post("/chat-llm/")
 def chat_llm(request: RequestModel):
-    chat_session = session_manager.get_session(request.userID)
+    chat_session = session_manager.get_session(request.userID, request.requestID)
     try:
         response = chat_llm_no_stream(request, chat_session)
         chat_session.user_id = request.userID
         chat_session.request_id = request.requestID
-        chat_session.model_id = request.modelID
+        chat_session.model_id = MODEL
         chat_session.model_kwargs = request.modelParameter
         return response
     except Exception as e:
@@ -165,23 +173,21 @@ def chat_llm(request: RequestModel):
 
 @app.post("/generate-mermaid/")
 def generate_mermaid_code(mermaid_request: MermaidRequest):
-    chat_session = session_manager.get_session(mermaid_request.userID)
+    session_manager.remove_session(mermaid_request.userID)
+    chat_session = session_manager.get_session(
+        mermaid_request.userID, mermaid_request.requestID
+    )
     mermaid_response = generate_mermaid(chat_session)
     return mermaid_response
 
 
 @app.post("/get-user-history/")
 def get_user_history(mermaid_request: MermaidRequest):
-    chat_session = session_manager.get_session(mermaid_request.userID)
+    chat_session = session_manager.get_session(
+        mermaid_request.userID, mermaid_request.requestID
+    )
     chat_history = chat_session.chats
     return {"userID": mermaid_request.userID, "chat_history": chat_history}
-
-
-@app.post("/delete-user-history/")
-def get_user_history(mermaid_request: MermaidRequest):
-    session_manager.remove_session(mermaid_request.userID)
-
-    return {"userID": mermaid_request.userID, "status": "deleted"}
 
 
 if __name__ == "__main__":
