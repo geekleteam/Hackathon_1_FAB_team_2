@@ -99,7 +99,7 @@ def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict
             Try to suggest the options for the user to choose from along with the question. 
             Please vary the type of questions (yes/no, multiple choice, open-ended, etc.) to get the required information.
             Only ask the question and no extra text. And if the user is not sure or confused, suggest options.
-            Ask one subsequent question in fewer than 50 words if necessary. Only ask the question and no extra text.
+            Ask one subsequent question in fewer than 50 words if necessary. Only ask ONE question and no extra text.
         """
 
     response = chat_model.invoke(text_input)
