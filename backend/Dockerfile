@@ -16,13 +16,14 @@ ARG DB_NAME
 ARG DB_USER
 ARG DB_PASSWORD
 ARG DB_PORT
+ARG API_TOKEN
 
 ENV DB_HOST=$DB_HOST
 ENV DB_NAME=$DB_NAME
 ENV DB_USER=$DB_USER
 ENV DB_PASSWORD=$DB_PASSWORD
 ENV DB_PORT=$DB_PORT
-
+ENV API_TOKEN=$API_TOKEN
 
 # Copy the main.py and llm.py files into the container at /app
 COPY main.py user_session.py /app/
