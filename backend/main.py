@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from user_session import ChatSession, ChatSessionManager
 import requests
 from dotenv import load_dotenv
+# from services.users import get_authorization_url, handle_callback
 
 # Load environment variables from .env file
 load_dotenv()
@@ -59,6 +60,55 @@ class MermaidRequest(BaseModel):
     userID: str
     requestID: str
 
+@app.post("/chat-gpt/")
+def chat_gpt(request: RequestModel):
+    chat_session = session_manager.get_session(request.userID, request.requestID)
+    try:
+        response = chat_gpt_no_stream(request, chat_session)
+        chat_session.user_id = request.userID
+        chat_session.request_id = request.requestID
+        chat_session.model_id = MODEL
+        chat_session.model_kwargs = request.modelParameter
+        return response
+    except Exception as e:
+        logger.error(f"Error generating response: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating response: {str(e)}"
+        )
+
+def chat_gpt_no_stream(request: RequestModel, chat_session: ChatSession) -> dict:
+    chat_model = ChatBedrock(
+        model_id=MODEL,
+        client=bedrock,
+        model_kwargs=request.modelParameter,
+        streaming=False, 
+    )
+    
+    text_input = request.user_input
+    if len(chat_session.chats) == 0:
+        initial_context = "Hello! How can I assist you today?"
+        text_input = initial_context + " " + text_input
+    else:
+        text_input = f"""
+            You are a general-purpose chat assistant. 
+            Here is the conversation so far:
+            <start>
+            {chat_session.str_chat()}
+            user: {request.user_input}
+            <end>
+            Please respond appropriately based on the conversation history.
+        """
+
+    response = chat_model.invoke(text_input)
+    logger.info(f"Response generated for user: {request.userID}")
+    logger.info(f"User chat history: {chat_session.chats}")
+
+    response_content = response.content
+    chat_session.add_chat(request.user_input, response_content, conn=conn)
+    return {
+        "user_input": request.user_input,
+        "model_output": response_content,
+    }
 
 def chat_llm_no_stream(request: RequestModel, chat_session: ChatSession) -> dict:
 
@@ -325,6 +375,17 @@ def delete_workspace(workspaceId: str = Query(..., description="The workspace ID
     else:
         raise HTTPException(status_code=response.status_code, detail=response.text)
     
+# @app.get("/auth")
+# async def auth():
+#     return await get_authorization_url()
+
+# @app.get("/callback")
+# async def callback(request: Request):
+#     code = request.query_params.get("code")
+#     if not code:
+#         raise HTTPException(status_code=400, detail="Code not provided")
+#     return await handle_callback(code)
+
 if __name__ == "__main__":
     import uvicorn
 
