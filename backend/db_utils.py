@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            host=os.environ["DB_HOST"],
-            dbname=os.environ["DB_NAME"],
-            user=os.environ["DB_USER"],
-            password=os.environ["DB_PASSWORD"],
-            port=os.environ["DB_PORT"],
+            host='18.237.155.139',
+            dbname='geekleai',
+            user='yash',
+            password='123456a@',
+            port='5432',
         )
         logger.info("Connection to DB established..")
         return conn
